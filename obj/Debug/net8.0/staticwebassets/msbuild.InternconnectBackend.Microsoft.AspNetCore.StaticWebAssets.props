@@ -1,0 +1,68 @@
+﻿<Project>
+  <ItemGroup>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\5675867e-1ced-4f03-b553-b81e6ea4d870_Salinan dari Form LPJ KIP Kuliah Ganjil 2024-2025.docx (1).pdf))">
+      <SourceType>Package</SourceType>
+      <SourceId>InternconnectBackend</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/InternconnectBackend</BasePath>
+      <RelativePath>uploads/5675867e-1ced-4f03-b553-b81e6ea4d870_Salinan dari Form LPJ KIP Kuliah Ganjil 2024-2025.docx (1).pdf</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\5675867e-1ced-4f03-b553-b81e6ea4d870_Salinan dari Form LPJ KIP Kuliah Ganjil 2024-2025.docx (1).pdf))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\5c22c212-bf78-4abd-b5c6-aebc99829d38_img20240131_18181643.pdf))">
+      <SourceType>Package</SourceType>
+      <SourceId>InternconnectBackend</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/InternconnectBackend</BasePath>
+      <RelativePath>uploads/5c22c212-bf78-4abd-b5c6-aebc99829d38_img20240131_18181643.pdf</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\5c22c212-bf78-4abd-b5c6-aebc99829d38_img20240131_18181643.pdf))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\7b5ae5ce-8449-48c9-9e4f-d471eaee1f1d_4a2aa872-45e4-491b-bd80-b405d12be882.pdf))">
+      <SourceType>Package</SourceType>
+      <SourceId>InternconnectBackend</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/InternconnectBackend</BasePath>
+      <RelativePath>uploads/7b5ae5ce-8449-48c9-9e4f-d471eaee1f1d_4a2aa872-45e4-491b-bd80-b405d12be882.pdf</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\7b5ae5ce-8449-48c9-9e4f-d471eaee1f1d_4a2aa872-45e4-491b-bd80-b405d12be882.pdf))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\bf39d100-2410-4db9-aa3a-79df62361b2e_Pande Nyoman Weda Wesnawa-3.pdf))">
+      <SourceType>Package</SourceType>
+      <SourceId>InternconnectBackend</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/InternconnectBackend</BasePath>
+      <RelativePath>uploads/bf39d100-2410-4db9-aa3a-79df62361b2e_Pande Nyoman Weda Wesnawa-3.pdf</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\bf39d100-2410-4db9-aa3a-79df62361b2e_Pande Nyoman Weda Wesnawa-3.pdf))</OriginalItemSpec>
+    </StaticWebAsset>
+  </ItemGroup>
+</Project>
