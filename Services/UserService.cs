@@ -43,7 +43,7 @@ namespace InternconnectBackend.Services
                 if (!dto.File.ContentType.Equals("application/pdf"))
                     throw new Exception("Invalid file format. Only PDF allowed");
 
-                string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads");
+                string uploadsFolder = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads");
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 

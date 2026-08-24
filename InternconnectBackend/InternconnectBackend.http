@@ -1,6 +1,0 @@
-@InternconnectBackend_HostAddress = http://localhost:5244
-
-GET {{InternconnectBackend_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
