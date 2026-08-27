@@ -70,6 +70,7 @@ namespace InternconnectBackend.Controllers
             return Ok(result);
         }
 
+
         [HttpGet("logbooks-with-monev")]
         public async Task<IActionResult> GetLogbooksWithMonev()
         {
@@ -107,6 +108,50 @@ namespace InternconnectBackend.Controllers
                 return StatusCode(500, new { message = "Terjadi kesalahan internal." });
             }
         }
+        // Controllers/MonevController.cs
 
+        [HttpGet("monev-with-logbook")]
+        public async Task<IActionResult> GetMonevByUsername()
+        {
+            try
+            {
+                // Ambil username dari token JWT
+                var username = User.FindFirstValue(ClaimTypes.Name);
+                if (string.IsNullOrEmpty(username))
+                {
+                    return Unauthorized(new { message = "User tidak ditemukan." });
+                }
+
+                // Panggil service
+                var monevData = await _monevService.GetMonevByUsernameAsync(username);
+
+                if (monevData == null || !monevData.Any())
+                {
+                    return NotFound(new
+                    {
+                        message = $"Tidak ada data Monev untuk user {username}.",
+                        username = username
+                    });
+                }
+
+                // Return response
+                return Ok(new
+                {
+                    message = $"Data Monev untuk user {username} berhasil ditemukan.",
+                    totalData = monevData.Count,
+                    username = username,
+                    data = monevData
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error di GetMonevByUsername: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    message = "Terjadi kesalahan internal server.",
+                    error = ex.Message
+                });
+            }
+        }
     }
 }

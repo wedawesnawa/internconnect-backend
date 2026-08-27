@@ -62,5 +62,19 @@ namespace InternconnectBackend.Services
             return true;
         }
 
+
+        public async Task<List<UserRole>> GetUsersByRoleAsync(string role)
+        {
+            var users = await _context.Users
+                .Where(u => u.Role == role)
+                .Select(u => new UserRole
+                {
+                    Username = u.Username,
+                    Role = u.Role
+                })
+                .ToListAsync();
+
+            return users;
+        }
     }
 }

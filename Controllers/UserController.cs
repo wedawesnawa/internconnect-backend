@@ -35,5 +35,33 @@ namespace InternconnectBackend.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
+        [HttpGet("by-role")]
+        public async Task<IActionResult> GetUsersByRole(
+            [FromQuery] string role)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(role))
+                {
+                    return BadRequest(new
+                    {
+                        message = "Role is required"
+                    });
+                }
+
+                var users = await _userService.GetUsersByRoleAsync(role);
+
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = ex.Message
+                });
+            }
+        }
+
     }
 }

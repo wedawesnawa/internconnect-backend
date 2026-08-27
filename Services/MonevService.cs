@@ -95,6 +95,51 @@ namespace InternconnectBackend.Services
                 .Distinct()
                 .ToListAsync();
         }
+        // Services/MonevService.cs
+        public async Task<List<MonevWithLogbookDto>> GetMonevByUsernameAsync(string username)
+        {
+            try
+            {
+                // Query untuk mengambil data Monev dengan join ke Logbook dan LogbookShared
+                var query = from m in _context.Monevs
+                            join ls in _context.LogbookShareds on m.IdShared equals ls.IdShared
+                            join l in _context.Logbooks on m.KodeLogbook equals l.KodeLogbook
+                            join u in _context.Users on l.Username equals u.Username
+                            where ls.SharedWith == username || l.Username == username
+                            select new MonevWithLogbookDto
+                            {
+                                // Data Monev
+                                IdMonev = m.IdMonev,
+                                Date = m.Date,
+                                TimeStart = m.TimeStart,
+                                TimeEnd = m.TimeEnd,
+                                RoomUrl = m.RoomUrl,
+                                KodeLogbook = m.KodeLogbook,
+                                IdShared = m.IdShared,
 
+                                // Data Logbook
+                                LogbookContent = l.Content,
+                                LogbookDateStart = l.DateStart,
+                                LogbookDateEnd = l.DateEnd,
+                                LogbookDeskripsi = l.Deskripsi,
+                                LogbookUsername = l.Username,
+                                LogbookImageUrl = l.ImageUrl,
+                                LogbookStatus = l.Status,
+                                LogbookTotalDateRange = l.TotalDateRange,
+                                LogbookTotalLogbookDetails = l.TotalLogbookDetails,
+
+                                // Data LogbookShared
+                                SharedWith = ls.SharedWith,
+                                Permission = ls.Permission,
+                            };
+
+                return await query.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error getting monev by username {username}: {ex.Message}");
+                throw;
+            }
+        }
     }
 }

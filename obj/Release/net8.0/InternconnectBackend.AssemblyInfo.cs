@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("InternconnectBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f1edffa41220b9e9553752bc0e61efad3d86c705")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ab22dd5d25b4aa5b945e637b75bc8b61c97ebc63")]
 [assembly: System.Reflection.AssemblyProductAttribute("InternconnectBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("InternconnectBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
