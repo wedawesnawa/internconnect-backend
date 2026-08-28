@@ -78,6 +78,7 @@ namespace InternconnectBackend.Controllers
             return Ok(detailLogbook);
         }
 
+        [Authorize(Policy = "UserOrMentorOrSupervisor")]
         [HttpGet("{kodeLogbook}/all")]
         public async Task<IActionResult> GetAllDetailLogbooks(Guid kodeLogbook)
         {
@@ -136,7 +137,7 @@ namespace InternconnectBackend.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Pembimbing")]
+        [Authorize(Roles = "Supervisor")]
         [HttpPut("{id}/verif")]
         public async Task<IActionResult> VerifDetailLogbook(int id, [FromBody] VerifStatusDto dto)
         {

@@ -194,7 +194,7 @@ namespace InternconnectBackend.Controllers
             return Ok(logbooks);
         }
 
-
+        [Authorize(Policy = "UserOrMentorOrSupervisor")]
         [HttpGet("{kodeLogbook}")]
         public async Task<IActionResult> GetLogbookByKode(Guid kodeLogbook)
         {
