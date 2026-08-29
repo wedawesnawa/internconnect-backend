@@ -1,5 +1,6 @@
 ﻿using InternconnectBackend.Data;
 using InternconnectBackend.Models;
+using InternconnectBackend.Services; // Tambahkan ini
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -9,11 +10,17 @@ namespace InternconnectBackend.Services
     {
         private readonly InternconnectDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly IMinioService _minioService; // Tambahkan ini
 
-        public UserService(InternconnectDbContext context, IWebHostEnvironment env)
+        // Update constructor
+        public UserService(
+            InternconnectDbContext context,
+            IWebHostEnvironment env,
+            IMinioService minioService) // Tambahkan parameter
         {
             _context = context;
             _env = env;
+            _minioService = minioService; // Inject MinIO Service
         }
 
         public async Task<bool> UpdateUserRoleAsync(ClaimsPrincipal userClaims, UpdateUserRoleDto dto)
@@ -33,35 +40,49 @@ namespace InternconnectBackend.Services
             if (userDetail == null)
                 throw new Exception("User detail not found");
 
-            userDetail.Instansi = dto.Instansi; // Menyimpan instansi ke dalam database
+            userDetail.Instansi = dto.Instansi;
 
+            // Upload file ke MinIO
             if (dto.File != null)
             {
-                if (dto.File.Length > 10 * 1024 * 1024)
-                    throw new Exception("File size exceeds 10MB");
-
-                if (!dto.File.ContentType.Equals("application/pdf"))
-                    throw new Exception("Invalid file format. Only PDF allowed");
-
-                string uploadsFolder = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
-                string uniqueFileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                try
                 {
-                    await dto.File.CopyToAsync(fileStream);
-                }
+                    // Validasi file
+                    if (dto.File.Length > 10 * 1024 * 1024) // 10MB
+                        throw new Exception("File size exceeds 10MB");
 
-                userDetail.FileUrl = $"/uploads/{uniqueFileName}";
+                    if (!dto.File.ContentType.Equals("application/pdf"))
+                        throw new Exception("Invalid file format. Only PDF allowed");
+
+                    // Hapus file lama jika ada
+                    if (!string.IsNullOrEmpty(userDetail.FileUrl))
+                    {
+                        await _minioService.DeleteFileAsync(userDetail.FileUrl);
+                    }
+
+                    // Upload file baru ke MinIO
+                    string filePath = await _minioService.UploadFileAsync(dto.File, "user-documents");
+                    userDetail.FileUrl = filePath; // Simpan path di database
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error uploading file: {ex.Message}");
+                }
             }
 
             await _context.SaveChangesAsync();
             return true;
         }
 
+        // Method baru untuk mendapatkan file URL
+        public async Task<string> GetUserFileUrlAsync(string username)
+        {
+            var userDetail = await _context.UserDetails.FirstOrDefaultAsync(ud => ud.Username == username);
+            if (userDetail == null || string.IsNullOrEmpty(userDetail.FileUrl))
+                return null;
+
+            return await _minioService.GetFileUrlAsync(userDetail.FileUrl);
+        }
 
         public async Task<List<UserRole>> GetUsersByRoleAsync(string role)
         {

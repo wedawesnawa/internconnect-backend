@@ -26,7 +26,17 @@ namespace InternconnectBackend.Controllers
             {
                 bool success = await _userService.UpdateUserRoleAsync(User, dto);
                 if (success)
-                    return Ok(new { message = "User role and file updated successfully" });
+                {
+                    // Ambil URL file yang baru diupload
+                    var username = User.FindFirstValue(ClaimTypes.Name);
+                    var fileUrl = await _userService.GetUserFileUrlAsync(username);
+
+                    return Ok(new
+                    {
+                        message = "User role and file updated successfully",
+                        fileUrl = fileUrl // Kirim URL ke frontend
+                    });
+                }
 
                 return BadRequest(new { message = "Update failed" });
             }
@@ -36,32 +46,46 @@ namespace InternconnectBackend.Controllers
             }
         }
 
+        // Endpoint untuk mendapatkan file URL
+        [HttpGet("file-url")]
+        public async Task<IActionResult> GetUserFileUrl()
+        {
+            try
+            {
+                var username = User.FindFirstValue(ClaimTypes.Name);
+                if (string.IsNullOrEmpty(username))
+                    return Unauthorized(new { message = "User not authenticated" });
+
+                var fileUrl = await _userService.GetUserFileUrlAsync(username);
+
+                if (string.IsNullOrEmpty(fileUrl))
+                    return NotFound(new { message = "File not found" });
+
+                return Ok(new { fileUrl });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
         [HttpGet("by-role")]
-        public async Task<IActionResult> GetUsersByRole(
-            [FromQuery] string role)
+        public async Task<IActionResult> GetUsersByRole([FromQuery] string role)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(role))
                 {
-                    return BadRequest(new
-                    {
-                        message = "Role is required"
-                    });
+                    return BadRequest(new { message = "Role is required" });
                 }
 
                 var users = await _userService.GetUsersByRoleAsync(role);
-
                 return Ok(users);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    error = ex.Message
-                });
+                return StatusCode(500, new { error = ex.Message });
             }
         }
-
     }
 }

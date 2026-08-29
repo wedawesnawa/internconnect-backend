@@ -95,7 +95,9 @@ builder.Services.AddScoped<UserDetailService>();
 builder.Services.AddScoped<MonevService>();
 builder.Services.AddHttpClient<WherebyService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IMinioService, MinioService>();
 builder.Services.AddHttpContextAccessor();
+
 
 
 
