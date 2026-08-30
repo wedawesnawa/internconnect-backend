@@ -427,7 +427,7 @@ Contoh role yang digunakan dalam sistem:
 
 ---
 
-# 👤 Account API
+# Account API
 
 ## Register
 
