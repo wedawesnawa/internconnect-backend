@@ -928,7 +928,7 @@ Models/
 
 ---
 
-# 🗃Database Migration
+# Database Migration
 
 Project menggunakan Entity Framework Core Migration.
 
@@ -992,7 +992,7 @@ Build succeeded.
 
 ---
 
-# ▶️ Run Backend
+# Run Backend
 
 Jalankan backend:
 
@@ -1031,7 +1031,7 @@ Swagger dapat digunakan untuk:
 
 ---
 
-# 🔑 Menggunakan JWT di Swagger
+# Menggunakan JWT di Swagger
 
 Setelah melakukan login dan mendapatkan JWT token:
 
