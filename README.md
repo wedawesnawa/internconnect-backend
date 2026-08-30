@@ -1,30 +1,443 @@
 # Internconnect Backend
 
-Backend API for the **Internconnect** application.
+Backend REST API untuk aplikasi **Internconnect**, sebuah platform yang mendukung proses monitoring kegiatan magang, pengelolaan logbook, komunikasi antara mahasiswa dan pembimbing, pengajuan monitoring dan evaluasi (Monev), berbagi logbook, serta integrasi meeting online.
 
-## API Documentation
+Backend dibangun menggunakan **ASP.NET Core Web API** dengan **Microsoft SQL Server** sebagai database utama, **MinIO** sebagai object storage untuk file dan gambar, **JWT (JSON Web Token)** untuk autentikasi dan otorisasi, serta **Whereby API** untuk mendukung pembuatan online meeting.
 
-The following API documentation is based on the **InternconnectBackend** Swagger UI.
+---
 
-### Base URL
+# Technology Stack
+
+Project ini menggunakan teknologi berikut:
+
+| Technology            | Description                          |
+| --------------------- | ------------------------------------ |
+| ASP.NET Core          | Framework backend dan REST API       |
+| .NET 8                | Runtime aplikasi                     |
+| Microsoft SQL Server  | Database utama                       |
+| Entity Framework Core | ORM dan database migration           |
+| MinIO                 | Object storage untuk gambar dan file |
+| JWT                   | Authentication dan authorization     |
+| Whereby API           | Pembuatan online meeting             |
+| Docker                | Menjalankan service dalam container  |
+| Swagger / OpenAPI     | Dokumentasi dan testing API          |
+
+---
+
+# Features
+
+Beberapa fitur utama yang tersedia pada backend:
+
+* User registration dan login
+* Authentication menggunakan JWT
+* Role-based authorization
+* Manajemen user dan role
+* Manajemen profile user
+* Upload profile picture
+* Upload file dokumen
+* Manajemen logbook
+* Manajemen aktivitas logbook
+* Verifikasi aktivitas logbook
+* Sharing logbook dengan user lain
+* Monitoring dan evaluasi (Monev)
+* Upload dan penyimpanan gambar menggunakan MinIO
+* Pembuatan online meeting menggunakan Whereby API
+* Dokumentasi API menggunakan Swagger
+
+---
+
+# Architecture
 
 ```text
-http://localhost:5244
+Client / Frontend
+        │
+        ▼
+ASP.NET Core Web API
+        │
+        ├──────────────► JWT Authentication
+        │
+        ├──────────────► Microsoft SQL Server
+        │                     │
+        │                     ▼
+        │                 Database
+        │
+        ├──────────────► MinIO
+        │                     │
+        │                     ▼
+        │              Image / File Storage
+        │
+        └──────────────► Whereby API
+                              │
+                              ▼
+                        Online Meeting
 ```
 
 ---
 
-# API Endpoints
+# Prerequisites
 
-## 1. Account
+Pastikan software berikut sudah terinstall:
 
-Endpoints related to authentication and account management.
+* Git
+* Docker Desktop
+* .NET 8 SDK
+* Visual Studio 2022 atau Visual Studio Code
+* SQL Server Management Studio (Opsional)
 
-### 1.1 Register
+Periksa versi .NET:
 
-**POST** `/api/Account/register`
+```powershell
+dotnet --version
+```
 
-#### Request Body
+Pastikan menggunakan versi yang mendukung:
+
+```text
+.NET 8
+```
+
+Periksa Docker:
+
+```powershell
+docker --version
+docker compose version
+```
+
+---
+
+# Installation
+
+## 1. Clone Repository
+
+Clone repository:
+
+```powershell
+git clone https://github.com/wedawesnawa/internconnect-backend.git
+```
+
+Masuk ke folder project:
+
+```powershell
+cd internconnect-backend
+```
+
+Kemudian masuk ke folder backend:
+
+```powershell
+cd InternconnectBackend
+```
+
+---
+
+# Docker Setup
+
+Project menggunakan Docker untuk menjalankan service pendukung seperti:
+
+* Microsoft SQL Server
+* MinIO
+
+Pastikan Docker Desktop sudah berjalan sebelum melanjutkan.
+
+---
+
+## 2. Microsoft SQL Server dengan Docker
+
+Buat atau gunakan file:
+
+```text
+docker-compose.yml
+```
+
+Contoh konfigurasi SQL Server:
+
+```yaml
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: internconnect-sqlserver
+    restart: unless-stopped
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrongPassword123!"
+
+    ports:
+      - "1433:1433"
+
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+volumes:
+  sqlserver_data:
+```
+
+Jalankan container:
+
+```powershell
+docker compose up -d
+```
+
+Periksa container:
+
+```powershell
+docker ps
+```
+
+SQL Server akan tersedia pada:
+
+```text
+Server: localhost
+Port: 1433
+```
+
+Contoh connection string:
+
+```text
+Server=localhost,1433;
+Database=InternconnectDb;
+User Id=sa;
+Password=YourStrongPassword123!;
+TrustServerCertificate=True;
+```
+
+---
+
+# MinIO dengan Docker
+
+MinIO digunakan sebagai **object storage** untuk menyimpan:
+
+* Foto profile
+* Gambar logbook
+* File dokumen
+
+Tambahkan konfigurasi MinIO pada:
+
+```text
+docker-compose.yml
+```
+
+Contoh:
+
+```yaml
+services:
+  minio:
+    image: minio/minio
+    container_name: internconnect-minio
+    restart: unless-stopped
+
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+    volumes:
+      - minio_data:/data
+
+    command: server /data --console-address ":9001"
+
+volumes:
+  minio_data:
+```
+
+Jalankan:
+
+```powershell
+docker compose up -d
+```
+
+MinIO API tersedia pada:
+
+```text
+http://localhost:9000
+```
+
+MinIO Console tersedia pada:
+
+```text
+http://localhost:9001
+```
+
+Login menggunakan:
+
+```text
+Username: minioadmin
+Password: minioadmin123
+```
+
+> Untuk production, jangan menggunakan credential default.
+
+---
+
+# Contoh Docker Compose Lengkap
+
+Contoh file:
+
+```yaml
+services:
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: internconnect-sqlserver
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrongPassword123!"
+
+    ports:
+      - "1433:1433"
+
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+
+  minio:
+    image: minio/minio
+    container_name: internconnect-minio
+
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+    volumes:
+      - minio_data:/data
+
+    command: server /data --console-address ":9001"
+
+
+volumes:
+  sqlserver_data:
+  minio_data:
+```
+
+Jalankan seluruh service:
+
+```powershell
+docker compose up -d
+```
+
+Menghentikan service:
+
+```powershell
+docker compose down
+```
+
+Melihat log:
+
+```powershell
+docker compose logs
+```
+
+---
+
+# Konfigurasi Environment
+
+Buat file:
+
+```text
+appsettings.json
+```
+
+Jika tersedia file example:
+
+```powershell
+Copy-Item appsettings.example.json appsettings.json
+```
+
+Contoh konfigurasi:
+
+```json
+{
+  "ConnectionStrings": {
+    "InternconnectConnectionString": "Server=localhost,1433;Database=InternconnectDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True"
+  },
+
+  "Jwt": {
+    "Key": "YOUR_SECRET_KEY_CHANGE_THIS",
+    "Issuer": "InternconnectBackend",
+    "Audience": "InternconnectFrontend"
+  },
+
+  "Minio": {
+    "Endpoint": "localhost:9000",
+    "AccessKey": "minioadmin",
+    "SecretKey": "minioadmin123",
+    "BucketName": "internconnect",
+    "Secure": false
+  },
+
+  "Whereby": {
+    "ApiKey": "YOUR_WHEREBY_API_KEY"
+  }
+}
+```
+
+> Jangan melakukan commit terhadap `appsettings.json` apabila file tersebut berisi password, JWT secret, API key, atau credential production.
+
+---
+
+# JWT Authentication
+
+Project menggunakan **JSON Web Token (JWT)** untuk melakukan authentication dan authorization.
+
+Alur autentikasi:
+
+```text
+User Login
+    │
+    ▼
+POST /api/Account/login
+    │
+    ▼
+Backend memverifikasi username dan password
+    │
+    ▼
+JWT Token dibuat
+    │
+    ▼
+Token dikirim ke client
+    │
+    ▼
+Client mengirim token pada request berikutnya
+    │
+    ▼
+Authorization berhasil
+```
+
+Contoh request header:
+
+```http
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+JWT digunakan untuk mengidentifikasi user yang sedang login dan menentukan hak akses berdasarkan role.
+
+Contoh role yang digunakan dalam sistem:
+
+* User
+* Supervisor
+* Mentor
+* Admin
+
+---
+
+# 👤 Account API
+
+## Register
+
+Mendaftarkan user baru.
+
+```http
+POST /api/Account/register
+```
+
+Request:
 
 ```json
 {
@@ -34,17 +447,17 @@ Endpoints related to authentication and account management.
 }
 ```
 
-#### Response
-
-**200 — Success**
-
 ---
 
-### 1.2 Login
+## Login
 
-**POST** `/api/Account/login`
+Melakukan autentikasi user.
 
-#### Request Body
+```http
+POST /api/Account/login
+```
+
+Request:
 
 ```json
 {
@@ -53,17 +466,55 @@ Endpoints related to authentication and account management.
 }
 ```
 
-#### Response
-
-**200 — Success**
+Setelah login berhasil, backend melakukan autentikasi user dan menghasilkan token JWT yang digunakan untuk mengakses endpoint yang membutuhkan authorization.
 
 ---
 
-### 1.3 Assign Role
+## Get Current User
 
-**POST** `/api/Account/assign-role`
+Mendapatkan informasi user yang sedang login berdasarkan identitas yang terdapat pada JWT token.
 
-#### Request Body
+```http
+GET /api/Account/me
+```
+
+Endpoint ini biasanya digunakan oleh frontend untuk:
+
+* Mengecek status login user
+* Mendapatkan identitas user yang sedang login
+* Mengambil username atau claim dari JWT
+* Menentukan role user
+* Menampilkan data user pada aplikasi
+
+Request membutuhkan JWT:
+
+```http
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+---
+
+## Logout
+
+Melakukan proses logout user.
+
+```http
+POST /api/Account/logout
+```
+
+Pada arsitektur JWT, mekanisme logout dapat berupa penghapusan token dari client atau mekanisme tambahan seperti token revocation, tergantung implementasi backend.
+
+---
+
+## Assign Role
+
+Mengubah atau memberikan role kepada user.
+
+```http
+POST /api/Account/assign-role
+```
+
+Request:
 
 ```json
 {
@@ -72,399 +523,176 @@ Endpoints related to authentication and account management.
 }
 ```
 
-#### Response
-
-**200 — Success**
+Endpoint ini hanya dapat digunakan oleh user dengan role yang memiliki hak akses untuk melakukan manajemen role.
 
 ---
 
-# 2. Admin
+# Logbook API
 
-Endpoints for retrieving admin data.
+## Create Logbook
 
-### 2.1 Get Admin
+Membuat logbook baru.
 
-**GET** `/api/Admin`
-
-#### Parameters
-
-No parameters required.
-
-#### Response
-
-**200 — Success**
-
----
-
-# 3. Detail Logbook
-
-Endpoints for managing logbook details.
-
-## 3.1 Create Detail Logbook
-
-**POST** `/api/DetailLogbook/{kodeLogbook}/create`
-
-#### Path Parameters
-
-| Parameter     | Type          | Required | Description  |
-| ------------- | ------------- | -------- | ------------ |
-| `kodeLogbook` | string (UUID) | Yes      | Kode logbook |
-
-#### Request Body
-
-```json
-{
-  "date": "2026-08-13T08:33:28.952Z",
-  "deskripsi": "string",
-  "kendala": "string",
-  "statusAttend": "string",
-  "timeStart": {
-    "ticks": 0
-  },
-  "timeEnd": {
-    "ticks": 0
-  },
-  "status": "string"
-}
+```http
+POST /api/Logbook/create
 ```
 
-#### Response
-
-**200 — Success**
-
----
-
-## 3.2 Get Detail Logbook by ID
-
-**GET** `/api/DetailLogbook/{id}`
-
-#### Path Parameters
-
-| Parameter | Type            | Required |
-| --------- | --------------- | -------- |
-| `id`      | integer (int32) | Yes      |
-
-#### Response
-
-**200 — Success**
-
----
-
-## 3.3 Get All Detail Logbook
-
-**GET** `/api/DetailLogbook/{kodeLogbook}/all`
-
-#### Path Parameters
-
-| Parameter     | Type          | Required |
-| ------------- | ------------- | -------- |
-| `kodeLogbook` | string (UUID) | Yes      |
-
-#### Response
-
-**200 — Success**
-
----
-
-## 3.4 Update Detail Logbook
-
-**PUT** `/api/DetailLogbook/{id}/update`
-
-#### Path Parameters
-
-| Parameter | Type            | Required |
-| --------- | --------------- | -------- |
-| `id`      | integer (int32) | Yes      |
-
-#### Request Body
-
-```json
-{
-  "date": "2026-08-13T08:33:28.958Z",
-  "deskripsi": "string",
-  "kendala": "string",
-  "statusAttend": "string",
-  "timeStart": {
-    "ticks": 0
-  },
-  "timeEnd": {
-    "ticks": 0
-  },
-  "status": "string"
-}
-```
-
-#### Response
-
-**200 — Success**
-
----
-
-## 3.5 Delete Detail Logbook
-
-**DELETE** `/api/DetailLogbook/{id}/delete`
-
-#### Path Parameters
-
-| Parameter | Type            | Required |
-| --------- | --------------- | -------- |
-| `id`      | integer (int32) | Yes      |
-
-#### Response
-
-**200 — Success**
-
----
-
-## 3.6 Verify Detail Logbook
-
-**PUT** `/api/DetailLogbook/{id}/verif`
-
-#### Path Parameters
-
-| Parameter | Type            | Required |
-| --------- | --------------- | -------- |
-| `id`      | integer (int32) | Yes      |
-
-#### Request Body
-
-```json
-{
-  "status": "string"
-}
-```
-
-#### Response
-
-**200 — Success**
-
----
-
-# 4. Dosen
-
-Endpoints for retrieving lecturer data and its relationships.
-
-### 4.1 Get All Dosen
-
-**GET** `/api/Dosen`
-
-#### Parameters
-
-No parameters required.
-
-#### Response
-
-**200 — Success**
-
----
-
-### 4.2 Get Dosen Relation User
-
-**GET** `/api/Dosen/relation-user`
-
-#### Parameters
-
-No parameters required.
-
-#### Response
-
-**200 — Success**
-
----
-
-### 4.3 Get Dosen Relation
-
-**GET** `/api/Dosen/relation`
-
-#### Parameters
-
-No parameters required.
-
-#### Response
-
-**200 — Success**
-
----
-
-# 5. Pembimbing
-
-Endpoints for retrieving supervisor data.
-
-### 5.1 Get Pembimbing
-
-**GET** `/api/Pembimbing`
-
-#### Parameters
-
-No parameters required.
-
-#### Response
-
-**200 — Success**
-
----
-
-# 6. Logbook
-
-Endpoints for creating, updating, deleting, and retrieving logbook data.
-
-## 6.1 Create Logbook
-
-**POST** `/api/Logbook/create`
-
-### Content-Type
+Content-Type:
 
 ```text
 multipart/form-data
 ```
 
-### Request Body
+| Field     | Type     | Required |
+| --------- | -------- | -------- |
+| Content   | string   | Yes      |
+| DateStart | datetime | Yes      |
+| DateEnd   | datetime | Yes      |
+| Status    | string   | Yes      |
+| Deskripsi | string   | Yes      |
+| Image     | binary   | No       |
 
-| Field       | Type               | Required |
-| ----------- | ------------------ | -------- |
-| `Content`   | string             | Yes      |
-| `DateStart` | string (date-time) | Yes      |
-| `DateEnd`   | string (date-time) | Yes      |
-| `Status`    | string             | Yes      |
-| `Deskripsi` | string             | Yes      |
-| `Image`     | string (binary)    | No       |
-
-#### Response
-
-**200 — Success**
+Gambar yang diupload dapat disimpan menggunakan MinIO.
 
 ---
 
-## 6.2 Update Logbook
+## Update Logbook
 
-**PUT** `/api/Logbook/update/{kodeLogbook}`
-
-### Path Parameters
-
-| Parameter     | Type          | Required |
-| ------------- | ------------- | -------- |
-| `kodeLogbook` | string (UUID) | Yes      |
-
-### Content-Type
-
-```text
-multipart/form-data
+```http
+PUT /api/Logbook/update/{kodeLogbook}
 ```
 
-### Request Body
-
-| Field       | Type               | Required |
-| ----------- | ------------------ | -------- |
-| `Content`   | string             | Yes      |
-| `DateStart` | string (date-time) | Yes      |
-| `DateEnd`   | string (date-time) | Yes      |
-| `Status`    | string             | Yes      |
-| `Deskripsi` | string             | Yes      |
-| `Image`     | string (binary)    | No       |
-
-#### Response
-
-**200 — Success**
+Digunakan untuk memperbarui data logbook berdasarkan kode logbook.
 
 ---
 
-## 6.3 Delete Logbook
+## Delete Logbook
 
-**DELETE** `/api/Logbook/delete/{kodeLogbook}`
+```http
+DELETE /api/Logbook/delete/{kodeLogbook}
+```
 
-### Path Parameters
-
-| Parameter     | Type          | Required |
-| ------------- | ------------- | -------- |
-| `kodeLogbook` | string (UUID) | Yes      |
-
-#### Response
-
-**200 — Success**
+Menghapus logbook berdasarkan kode logbook.
 
 ---
 
-## 6.4 Get All Logbooks
+## Get All Logbooks
 
-**GET** `/api/Logbook/all`
+```http
+GET /api/Logbook/all
+```
 
-#### Parameters
-
-No parameters required.
-
-#### Response
-
-**200 — Success**
+Mengambil seluruh logbook yang tersedia sesuai dengan hak akses user.
 
 ---
 
-## 6.5 Get My Logbooks
+## Get My Logbooks
 
-**GET** `/api/Logbook/my-logbooks`
+```http
+GET /api/Logbook/my-logbooks
+```
 
-#### Parameters
+Mengambil seluruh logbook milik user yang sedang login.
 
-No parameters required.
-
-#### Response
-
-**200 — Success**
+Identitas user diperoleh dari JWT token.
 
 ---
 
-## 6.6 Get Logbook by Kode Logbook
+## Get Logbook Detail
 
-**GET** `/api/Logbook/{kodeLogbook}`
+```http
+GET /api/Logbook/{kodeLogbook}
+```
 
-### Path Parameters
+Mengambil detail satu logbook berdasarkan `kodeLogbook`.
 
-| Parameter     | Type          | Required |
-| ------------- | ------------- | -------- |
-| `kodeLogbook` | string (UUID) | Yes      |
-
-#### Response
-
-**200 — Success**
+Endpoint ini dapat digunakan ketika user yang memiliki izin ingin melihat logbook yang telah dibagikan.
 
 ---
 
-## 6.7 Get Logbook by User
+## Get Logbook Image URL
 
-**GET** `/api/Logbook/by-user/{username}`
+```http
+GET /api/Logbook/image-url/{kodeLogbook}
+```
 
-### Path Parameters
-
-| Parameter  | Type   | Required |
-| ---------- | ------ | -------- |
-| `username` | string | Yes      |
-
-#### Response
-
-**200 — Success**
+Mengambil URL gambar yang telah diupload pada logbook.
 
 ---
 
-# 7. Money
+# Detail Logbook API
 
-The **Money** category is available in the Swagger UI, but its endpoints are not displayed or exposed in the provided documentation.
+## Create Activity
+
+```http
+POST /api/DetailLogbook/{kodeLogbook}/create
+```
+
+Digunakan untuk membuat aktivitas pada logbook.
 
 ---
 
-# 8. Shared
+## Get Activity Detail
 
-Endpoints for managing logbook sharing data.
+```http
+GET /api/DetailLogbook/{id}
+```
 
-## 8.1 Create Shared
+Mengambil detail satu aktivitas berdasarkan ID.
 
-**POST** `/api/Shared/{kodeLogbook}/create`
+---
 
-### Path Parameters
+## Get All Activities
 
-| Parameter     | Type          | Required |
-| ------------- | ------------- | -------- |
-| `kodeLogbook` | string (UUID) | Yes      |
+```http
+GET /api/DetailLogbook/{kodeLogbook}/all
+```
 
-### Request Body
+Mengambil seluruh aktivitas dari satu logbook.
+
+---
+
+## Update Activity
+
+```http
+PUT /api/DetailLogbook/{id}/update
+```
+
+Memperbarui aktivitas logbook.
+
+---
+
+## Delete Activity
+
+```http
+DELETE /api/DetailLogbook/{id}/delete
+```
+
+Menghapus aktivitas logbook.
+
+---
+
+## Verify Activity
+
+```http
+PUT /api/DetailLogbook/{id}/verif
+```
+
+Digunakan oleh role seperti Supervisor atau Mentor untuk mengubah status atau melakukan verifikasi terhadap aktivitas user.
+
+---
+
+# Shared Logbook API
+
+Fitur ini memungkinkan user membagikan logbook kepada user lain.
+
+## Create Shared Logbook
+
+```http
+POST /api/Shared/{kodeLogbook}/create
+```
+
+Request:
 
 ```json
 {
@@ -474,235 +702,287 @@ Endpoints for managing logbook sharing data.
 }
 ```
 
-#### Response
+---
 
-**200 — Success**
+## Update Shared Logbook
+
+```http
+PUT /api/Shared/{kodeLogbook}/update/{id}
+```
+
+Digunakan untuk memperbarui informasi sharing atau permission.
 
 ---
 
-## 8.2 Update Shared
+## Delete Shared Access
 
-**PUT** `/api/Shared/{kodeLogbook}/update/{id}`
-
-### Path Parameters
-
-| Parameter     | Type            | Required |
-| ------------- | --------------- | -------- |
-| `kodeLogbook` | string (UUID)   | Yes      |
-| `id`          | integer (int32) | Yes      |
-
-### Request Body
-
-```json
-{
-  "idShared": 0,
-  "sharedWith": "string",
-  "permission": "string"
-}
+```http
+DELETE /api/Shared/{kodeLogbook}/delete/{id}
 ```
 
-#### Response
-
-**200 — Success**
+Menghapus akses user terhadap logbook yang sebelumnya dibagikan.
 
 ---
 
-## 8.3 Delete Shared
+## Get Shared Users
 
-**DELETE** `/api/Shared/{kodeLogbook}/delete/{id}`
+```http
+GET /api/Shared/{kodeLogbook}/all
+```
 
-### Path Parameters
-
-| Parameter     | Type            | Required |
-| ------------- | --------------- | -------- |
-| `kodeLogbook` | string (UUID)   | Yes      |
-| `id`          | integer (int32) | Yes      |
-
-#### Response
-
-**200 — Success**
+Mengambil daftar user yang memiliki akses terhadap logbook tertentu.
 
 ---
 
-## 8.4 Get All Shared
+# Monitoring dan Evaluasi (Monev)
 
-**GET** `/api/Shared/{kodeLogbook}/all`
+## Ajukan Monev
 
-### Path Parameters
+```http
+POST /api/Monev/ajukan-monev
+```
 
-| Parameter     | Type          | Required |
-| ------------- | ------------- | -------- |
-| `kodeLogbook` | string (UUID) | Yes      |
-
-#### Response
-
-**200 — Success**
+Digunakan oleh user untuk mengajukan proses monitoring dan evaluasi.
 
 ---
 
-# Endpoint Summary
+## Get Monev
 
-| No. | Method | Endpoint                                  |
-| --: | ------ | ----------------------------------------- |
-|   1 | POST   | `/api/Account/register`                   |
-|   2 | POST   | `/api/Account/login`                      |
-|   3 | POST   | `/api/Account/assign-role`                |
-|   4 | GET    | `/api/Admin`                              |
-|   5 | POST   | `/api/DetailLogbook/{kodeLogbook}/create` |
-|   6 | GET    | `/api/DetailLogbook/{id}`                 |
-|   7 | GET    | `/api/DetailLogbook/{kodeLogbook}/all`    |
-|   8 | PUT    | `/api/DetailLogbook/{id}/update`          |
-|   9 | DELETE | `/api/DetailLogbook/{id}/delete`          |
-|  10 | PUT    | `/api/DetailLogbook/{id}/verif`           |
-|  11 | GET    | `/api/Dosen`                              |
-|  12 | GET    | `/api/Dosen/relation-user`                |
-|  13 | GET    | `/api/Dosen/relation`                     |
-|  14 | GET    | `/api/Pembimbing`                         |
-|  15 | POST   | `/api/Logbook/create`                     |
-|  16 | PUT    | `/api/Logbook/update/{kodeLogbook}`       |
-|  17 | DELETE | `/api/Logbook/delete/{kodeLogbook}`       |
-|  18 | GET    | `/api/Logbook/all`                        |
-|  19 | GET    | `/api/Logbook/my-logbooks`                |
-|  20 | GET    | `/api/Logbook/{kodeLogbook}`              |
-|  21 | GET    | `/api/Logbook/by-user/{username}`         |
-|  22 | POST   | `/api/Shared/{kodeLogbook}/create`        |
-|  23 | PUT    | `/api/Shared/{kodeLogbook}/update/{id}`   |
-|  24 | DELETE | `/api/Shared/{kodeLogbook}/delete/{id}`   |
-|  25 | GET    | `/api/Shared/{kodeLogbook}/all`           |
-
-
-# Backend Installation
-## 1. Clone repository
-
-```powershell
-git clone https://github.com/wedawesnawa/internconnect-backend.git
-cd internconnect-backend
+```http
+GET /api/Monev/{kodeLogbook}
 ```
 
-Then navigate to the project folder:
+Mengambil data monitoring dan evaluasi berdasarkan logbook.
 
-```powershell
-cd InternconnectBackend
+---
+
+# User API
+
+## Update Role
+
+```http
+PUT /api/User/update-role
 ```
 
-## 2. Pastikan software yang dibutuhkan
+Digunakan ketika user mengajukan perubahan role, misalnya dari role default menjadi:
 
-You need to have the following installed:
+* Mentor
+* Supervisor
 
-* **Visual Studio 2022**
+Endpoint dapat menerima file pendukung seperti surat tugas.
 
-  * ASP.NET and web development workload
-* **.NET 8 SDK**
-* **SQL Server Express**
-* **SQL Server Management Studio (SSMS)**
-* Git
+---
 
-Check the installed .NET version:
+## Get User by Role
 
-```powershell
-dotnet --version
+```http
+GET /api/User/by-role?role={role}
 ```
 
-The installed version must support **.NET 8**.
-
-## 3. Buat `appsettings.json`
-
-Copy the example configuration file:
-
-```powershell
-Copy-Item appsettings.example.json appsettings.json
-```
-
-Then edit the file:
-
-```powershell
-notepad appsettings.json
-```
-
-Configure the connection string according to your SQL Server instance.
+Digunakan untuk mendapatkan user berdasarkan role.
 
 Contoh:
 
+```text
+/api/User/by-role?role=Supervisor
+```
+
+---
+
+# User Detail API
+
+## Get User Detail
+
+```http
+GET /api/UserDetail
+```
+
+Mengambil informasi detail user yang sedang login.
+
+---
+
+## Create User Detail
+
+```http
+POST /api/UserDetail
+```
+
+Membuat informasi detail user.
+
+---
+
+## Update User Detail
+
+```http
+PUT /api/UserDetail
+```
+
+Memperbarui informasi user.
+
+---
+
+## Upload Profile Picture
+
+```http
+PUT /api/UserDetail/upload-profile-picture
+```
+
+Digunakan untuk mengubah foto profile atau avatar user.
+
+File dapat disimpan menggunakan MinIO.
+
+---
+
+## Get User Detail by Username
+
+```http
+GET /api/UserDetail/{username}
+```
+
+Mengambil informasi detail user berdasarkan username.
+
+Endpoint ini dapat digunakan pada:
+
+* Daftar user
+* Informasi pembimbing
+* Informasi mentor
+* Informasi user yang menerima atau membagikan logbook
+
+---
+
+## Get Profile Picture URL
+
+```http
+GET /api/UserDetail/profile-picture-url
+```
+
+Mengambil URL foto profile user yang sedang login.
+
+---
+
+## Download File
+
+```http
+GET /api/UserDetail/download-file?filePath={filePath}
+```
+
+Digunakan untuk mengunduh file yang sebelumnya diupload, misalnya dokumen atau surat tugas.
+
+---
+
+# Online Meeting dengan Whereby API
+
+Internconnect dapat menggunakan **Whereby API** untuk membuat online meeting.
+
+Alur sederhana:
+
+```text
+User memilih jadwal meeting
+        │
+        ▼
+Frontend mengirim request ke Backend
+        │
+        ▼
+ASP.NET Core Backend
+        │
+        ▼
+Whereby API
+        │
+        ▼
+Meeting Room dibuat
+        │
+        ▼
+Meeting URL dikembalikan ke Frontend
+        │
+        ▼
+User bergabung ke Online Meeting
+```
+
+API key Whereby sebaiknya disimpan di environment configuration:
+
 ```json
 {
-  "ConnectionStrings": {
-    "InternconnectConnectionString": "Server=localhost\\SQLEXPRESS;Database=InternconnectDb;Trusted_Connection=True;TrustServerCertificate=True"
+  "Whereby": {
+    "ApiKey": "YOUR_WHEREBY_API_KEY"
   }
 }
 ```
 
-If your SQL Server instance name is different, adjust it accordingly.
+> API key tidak boleh disimpan secara langsung pada frontend karena dapat diketahui oleh pengguna.
 
-For example:
+Backend bertugas sebagai perantara antara frontend dan Whereby API agar API key tetap aman.
 
-```text
-DESKTOP-ABC123\SQLEXPRESS
-```
-
-maka:
+Contoh struktur service:
 
 ```text
-Server=DESKTOP-ABC123\\SQLEXPRESS;
+Controllers/
+    MeetingController.cs
+
+Services/
+    WherebyService.cs
+
+Models/
+    MeetingRequest.cs
+    MeetingResponse.cs
 ```
 
-## 4. Buat database
+---
 
-The repository contains the following migration files:
+# 🗃Database Migration
 
-```text
-Migrations/
-├── 20250220042630_Initial migration.cs
-├── 20250225030130_Update monev tb.cs
-├── 20250225140200_Update Logbook.cs
-├── 20250226114514_Update User Detail.cs
-└── InternconnectDbContextModelSnapshot.cs
-```
+Project menggunakan Entity Framework Core Migration.
 
-From the project folder, run:
-
-```powershell
-dotnet ef database update
-```
-
-This will create:
-
-```text
-SQL Server
-    ↓
-InternconnectDb
-    ↓
-Semua tabel dari migration
-```
-
-If `dotnet ef` is not available:
-
-```powershell
-dotnet tool install --global dotnet-ef
-```
-
-Then run:
-
-```powershell
-dotnet ef database update
-```
-
-> Because this project uses EF Core migrations, **do not create the tables manually in SSMS**. Let the migrations create the database structure.
-
-## 5. Restore dependency
-
-This is usually performed automatically during the build, but you can run it explicitly:
+Restore dependency:
 
 ```powershell
 dotnet restore
 ```
 
-Then run:
+Install EF Tool jika belum tersedia:
+
+```powershell
+dotnet tool install --global dotnet-ef
+```
+
+Jalankan migration:
+
+```powershell
+dotnet ef database update
+```
+
+Perintah tersebut akan membuat:
+
+```text
+Microsoft SQL Server
+        │
+        ▼
+InternconnectDb
+        │
+        ▼
+Tables
+Relationships
+Constraints
+```
+
+> Jangan membuat tabel secara manual jika project sudah menggunakan Entity Framework Core Migration.
+
+---
+
+# Build Project
+
+Restore dependency:
+
+```powershell
+dotnet restore
+```
+
+Build project:
 
 ```powershell
 dotnet build
 ```
 
-You should get:
+Jika berhasil:
 
 ```text
 Build succeeded.
@@ -710,13 +990,17 @@ Build succeeded.
 0 Error(s)
 ```
 
-## 6. Jalankan backend
+---
+
+# ▶️ Run Backend
+
+Jalankan backend:
 
 ```powershell
 dotnet run
 ```
 
-You should see output similar to:
+Contoh output:
 
 ```text
 Now listening on: http://localhost:5244
@@ -724,24 +1008,189 @@ Application started.
 Hosting environment: Development
 ```
 
-The port may vary depending on the project configuration.
+Port dapat berbeda tergantung konfigurasi project.
 
-## 7. Buka Swagger
+---
 
-If the backend is running on the current port:
+# Swagger API Documentation
+
+Setelah backend berjalan, buka:
 
 ```text
 http://localhost:5244/swagger
 ```
 
-There, you can view the available endpoints:
+Swagger dapat digunakan untuk:
+
+* Melihat seluruh endpoint
+* Melihat request body
+* Melihat parameter
+* Menguji API
+* Melakukan autentikasi menggunakan JWT
+* Memeriksa response API
+
+---
+
+# 🔑 Menggunakan JWT di Swagger
+
+Setelah melakukan login dan mendapatkan JWT token:
+
+1. Buka Swagger.
+2. Klik tombol **Authorize**.
+3. Masukkan token dengan format:
 
 ```text
-GET
-POST
-PUT
-DELETE
+Bearer YOUR_JWT_TOKEN
 ```
 
-and test the API.
+4. Klik **Authorize**.
+5. Endpoint yang membutuhkan authorization dapat diuji.
 
+---
+
+# Suggested Project Structure
+
+```text
+InternconnectBackend/
+│
+├── Controllers/
+│   ├── AccountController.cs
+│   ├── AdminController.cs
+│   ├── LogbookController.cs
+│   ├── DetailLogbookController.cs
+│   ├── SharedController.cs
+│   ├── MonevController.cs
+│   ├── UserController.cs
+│   └── UserDetailController.cs
+│
+├── Services/
+│   ├── MinioService.cs
+│   ├── WherebyService.cs
+│   └── ...
+│
+├── Models/
+│
+├── DTOs/
+│
+├── Data/
+│   └── ApplicationDbContext.cs
+│
+├── Migrations/
+│
+├── Properties/
+│
+├── appsettings.json
+├── appsettings.Development.json
+├── Program.cs
+└── InternconnectBackend.csproj
+```
+
+---
+
+# Development Workflow
+
+Untuk menjalankan project:
+
+## 1. Jalankan Docker Service
+
+```powershell
+docker compose up -d
+```
+
+## 2. Pastikan Container Berjalan
+
+```powershell
+docker ps
+```
+
+Pastikan container:
+
+```text
+internconnect-sqlserver
+internconnect-minio
+```
+
+berstatus:
+
+```text
+Up
+```
+
+## 3. Jalankan Database Migration
+
+```powershell
+dotnet ef database update
+```
+
+## 4. Jalankan Backend
+
+```powershell
+dotnet run
+```
+
+## 5. Buka Swagger
+
+```text
+http://localhost:5244/swagger
+```
+
+---
+
+# Stop Development Environment
+
+Menghentikan backend:
+
+```text
+CTRL + C
+```
+
+Menghentikan Docker container:
+
+```powershell
+docker compose down
+```
+
+Jika ingin menghapus container beserta volume:
+
+```powershell
+docker compose down -v
+```
+
+> Hati-hati menggunakan `-v` karena data SQL Server dan MinIO yang disimpan pada Docker volume dapat terhapus.
+
+---
+
+# Security Notes
+
+Untuk keamanan project:
+
+* Jangan commit `appsettings.json` yang berisi secret.
+* Jangan menyimpan JWT secret di repository public.
+* Jangan menyimpan Whereby API key di frontend.
+* Gunakan password SQL Server yang kuat.
+* Ganti credential default MinIO.
+* Gunakan environment variables pada production.
+* Gunakan HTTPS pada deployment production.
+* Batasi akses endpoint berdasarkan role.
+
+---
+
+# License
+
+This project is developed for the **Internconnect** application.
+
+---
+
+# Development
+
+Developed using:
+
+* ASP.NET Core
+* .NET 8
+* Microsoft SQL Server
+* Entity Framework Core
+* Docker
+* MinIO
+* JWT Authentication
+* Whereby API
+* Swagger / OpenAPI
