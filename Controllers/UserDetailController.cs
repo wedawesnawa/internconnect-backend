@@ -15,10 +15,12 @@ namespace InternconnectBackend.Controllers
     public class UserDetailController : ControllerBase
     {
         private readonly UserDetailService _userDetailService;
+        private readonly IMinioService _minioService;
 
-        public UserDetailController(UserDetailService userDetailService)
+        public UserDetailController(UserDetailService userDetailService, IMinioService minioService)
         {
             _userDetailService = userDetailService;
+            _minioService = minioService;
         }
 
         [HttpGet]
@@ -119,6 +121,13 @@ namespace InternconnectBackend.Controllers
             {
                 return NotFound(new { message = "User detail tidak ditemukan" });
             }
+
+            // Generate full URL dari MinIO jika ada profile picture
+            if (!string.IsNullOrEmpty(userDetail.profileUrl))
+            {
+                var fullUrl = await _userDetailService.GetProfilePictureFullUrlByUsernameAsync(username);
+                userDetail.profileUrl = fullUrl; // Update dengan full URL
+            }
             return Ok(userDetail);
         }
 
@@ -141,6 +150,53 @@ namespace InternconnectBackend.Controllers
             {
                 return StatusCode(500, new { error = ex.Message });
             }
+        }
+
+        [HttpGet("download-file")]
+        public async Task<IActionResult> DownloadFile([FromQuery] string filePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(filePath))
+                    return BadRequest(new { message = "File path is required" });
+
+                Console.WriteLine($"Downloading file with path: {filePath}");
+
+                // Download dari MinIO menggunakan full path
+                var fileBytes = await _minioService.DownloadFileAsync(filePath);
+
+                if (fileBytes == null || fileBytes.Length == 0)
+                    return NotFound(new { message = "File not found" });
+
+                // Get filename from path
+                var fileName = Path.GetFileName(filePath);
+
+                // Get content type
+                var extension = Path.GetExtension(fileName).ToLowerInvariant();
+                var contentType = GetContentType(extension);
+
+                // Return file
+                return File(fileBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error downloading file: {ex.Message}");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        private string GetContentType(string extension)
+        {
+            return extension switch
+            {
+                ".pdf" => "application/pdf",
+                ".doc" => "application/msword",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".txt" => "text/plain",
+                _ => "application/octet-stream"
+            };
         }
     }
 }

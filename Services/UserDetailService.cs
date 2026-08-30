@@ -31,21 +31,6 @@ namespace InternconnectBackend.Services
         public async Task<UserDetail> GetUserDetail()
         {
             var username = GetCurrentUsername();
-            //var userDetail = await _context.UserDetails
-            //    .Where(u => u.Username == username)
-            //    .Select(u => new UserDetailDto
-            //    {
-            //        Nama = u.Nama,
-            //        Telp = u.Telp,
-            //        Bio = u.Bio,
-            //        Alamat = u.Alamat,
-            //        Instansi = u.Instansi,
-            //        AlamatInstansi = u.AlamatInstansi,
-            //        Username = u.Username
-            //    })
-            //    .FirstOrDefaultAsync();
-
-            //return userDetail;
             return await _context.UserDetails.FirstOrDefaultAsync(u => u.Username == username);
         }
 
@@ -135,18 +120,35 @@ namespace InternconnectBackend.Services
             return await _minioService.GetFileUrlAsync(userDetail.profileUrl);
         }
 
-        public async Task<UserDetailDto> GetUserDetailByUsername(string username)
+        public async Task<string?> GetProfilePictureFullUrlByUsernameAsync(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+                return null;
+
+            var userDetail = await _context.UserDetails
+                .FirstOrDefaultAsync(u => u.Username == username);
+
+            if (userDetail == null || string.IsNullOrEmpty(userDetail.profileUrl))
+                return null;
+
+            return await _minioService.GetFileUrlAsync(userDetail.profileUrl);
+        }
+
+        public async Task<UserDetail> GetUserDetailByUsername(string username)
         {
             var userDetail = await _context.UserDetails
                 .Where(u => u.Username == username)
-                .Select(u => new UserDetailDto
+                .Select(u => new UserDetail
                 {
                     Nama = u.Nama,
                     Telp = u.Telp,
                     Bio = u.Bio,
                     Alamat = u.Alamat,
                     Instansi = u.Instansi,
-                    AlamatInstansi = u.AlamatInstansi
+                    AlamatInstansi = u.AlamatInstansi,
+                    profileUrl = u.profileUrl,
+                    FileUrl = u.FileUrl,
+                    Username = u.Username
                 })
                 .FirstOrDefaultAsync();
 
