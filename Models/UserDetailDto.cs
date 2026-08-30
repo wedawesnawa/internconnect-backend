@@ -8,5 +8,6 @@
         public required string Alamat { get; set; }
         public required string Instansi { get; set; }
         public string? AlamatInstansi { get; set; }
+        public string? profileUrl { get; set; }
     }
 }
